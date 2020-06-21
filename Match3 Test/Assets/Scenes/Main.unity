@@ -158,6 +158,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: ba5d6d6decdee0ba0a23b602bc2ef024, type: 3}
   - {fileID: 21300000, guid: cac14122db5e8aefab63f278e658b0ab, type: 3}
   - {fileID: 21300000, guid: fff18783040944184bef22f7b0424e99, type: 3}
+  gameBoard: {fileID: 1043274028}
+  nodePiece: {fileID: 0}
 --- !u!4 &394443025
 Transform:
   m_ObjectHideFlags: 0
