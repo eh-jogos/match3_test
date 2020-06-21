@@ -16,6 +16,8 @@ public class Match3 : MonoBehaviour
 	int height = 14;
 	Node[,] board;
 	List<NodePiece> piecesToUpdate;
+	List<FlippedPieces> piecesToFlip;
+	
 	System.Random random;
 	
 	// Start is called before the first frame update
@@ -29,6 +31,7 @@ public class Match3 : MonoBehaviour
 		string seed = getRandomSeed();
 		random = new System.Random(seed.GetHashCode());
 		piecesToUpdate = new List<NodePiece>();
+		piecesToFlip = new List<FlippedPieces>();
 
 		InitializeBoard();
 		VerifyBoard();
@@ -48,8 +51,63 @@ public class Match3 : MonoBehaviour
 
 		foreach (NodePiece piece in finishedUpdating)
 		{
+			FlippedPieces flipDuo = getFlipped(piece);
+			bool wasFlipped = (flipDuo != null);
+			
+			List<Coord> connected = isConnected(piece.index, true);
+			
+			if (wasFlipped) // If we flipped to make this update
+			{
+				NodePiece flippedPiece = flipDuo.getOtherPiece(piece);
+				AddConnectedGems(ref connected, isConnected(flippedPiece.index, true));
+				if (connected.Count == 0) // If we didn't make a match...
+					FlipPieces(piece.index, flippedPiece.index, false); // ...flip back
+			}
+			if (connected.Count > 0) // if we did make a match
+			{
+				Debug.Log("Connected: "+ connected.Count);
+				foreach(Coord coord in connected) // Remove the node pieces connected
+				{
+					Debug.Log("Remove Coord: "+ coord.x + ", " + coord.y);
+					Node node = getNodeAtCoord(coord);
+					NodePiece nodePiece = node.GetPiece();
+					if (nodePiece != null)
+					{
+						nodePiece.gameObject.SetActive(false);
+					}
+					node.SetPiece(null);
+				}
+			}
+
+			piecesToFlip.Remove(flipDuo); // Remove the flip after done
 			piecesToUpdate.Remove(piece);
 		}
+	}
+
+	FlippedPieces getFlipped(NodePiece ref_piece)
+	{
+		FlippedPieces flip_duo = null;
+		for (int i = 0; i < piecesToFlip.Count; i++)
+		{
+			if (piecesToFlip[i].getOtherPiece(ref_piece) != null)
+			{
+				flip_duo = piecesToFlip[i];
+				break;
+			}
+		}
+		return flip_duo;
+	}
+
+	NodePiece removeFlipped(NodePiece ref_piece)
+	{
+		NodePiece piece = null;
+		for (int i = 0; i < piecesToFlip.Count; i++)
+		{
+			piece = piecesToFlip[i].getOtherPiece(ref_piece);
+			if (piece != null)
+				break;
+		}
+		return piece;
 	}
 
 	void InitializeBoard()
@@ -121,7 +179,7 @@ public class Match3 : MonoBehaviour
 		piecesToUpdate.Add(piece);
 	}
 
-	public void FlipPieces(Coord one, Coord two)
+	public void FlipPieces(Coord one, Coord two, bool isMain)
 	{
 		if (getTypeAtCoord(one) <= 0)
 			return;
@@ -137,8 +195,8 @@ public class Match3 : MonoBehaviour
 			nodeOne.SetPiece(pieceTwo);
 			nodeTwo.SetPiece(pieceOne);
 
-			pieceOne.FlippedPiece = pieceTwo;
-			pieceTwo.FlippedPiece = pieceOne;
+			if (isMain)
+				piecesToFlip.Add(new FlippedPieces(pieceOne, pieceTwo));
 
 			piecesToUpdate.Add(pieceOne);
 			piecesToUpdate.Add(pieceTwo);
@@ -166,13 +224,16 @@ public class Match3 : MonoBehaviour
 		};
 
 		foreach (List<Coord> list in lists_to_add)
+		{
 			AddConnectedGems(ref connected, list);
+		}
 		
 		if (isMain)
 		{
 			for (int i = 0; i < connected.Count; i++)
 				AddConnectedGems(ref connected, isConnected(connected[i], false));
 		}
+		Debug.Log("connected Count: " + connected.Count);
 
 		if (connected.Count > 0)
 			connected.Add(ref_coord);
@@ -195,11 +256,17 @@ public class Match3 : MonoBehaviour
 				Coord adjacent = Coord.add(ref_coord, Coord.mult(dir, i));
 				int adjacent_type = getTypeAtCoord(adjacent);
 				if (adjacent_type == ref_type)
+				{
 					current_matches.Add(adjacent);
+				}
 			}
 
 			if (current_matches.Count > 1)
+			{	
+				Debug.Log("Match count: " + current_matches.Count);
 				line.AddRange(current_matches);
+				Debug.Log("Line count: " + line.Count);
+			}
 		}
 
 		if (line.Count > 1)
@@ -405,5 +472,28 @@ public class Node
 	public NodePiece GetPiece()
 	{
 		return piece;
+	}
+}
+
+[System.Serializable]
+public class FlippedPieces
+{
+	public NodePiece one;
+	public NodePiece two;
+
+	public FlippedPieces(NodePiece originPiece, NodePiece targetPiece)
+	{
+		one = originPiece;
+		two = targetPiece;
+	}
+
+	public NodePiece getOtherPiece(NodePiece piece)
+	{
+		if (piece == one)
+			return two;
+		else if (piece == one)
+			return one;
+		else
+			return null;
 	}
 }

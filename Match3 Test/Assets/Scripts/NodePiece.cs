@@ -34,23 +34,11 @@ public class NodePiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 			_rect = value;
 		}
 	}
-	private NodePiece _flippedPiece;
-	public NodePiece FlippedPiece
-	{
-		get 
-		{
-			return _flippedPiece;
-		}
-		set
-		{
-			_flippedPiece = value;
-		}
-	}
+
 	private bool updating = false;
 
 	public void Initialize(int new_type, Coord new_coord, Sprite piece)
 	{
-		_flippedPiece = null;
 		img = GetComponent<Image>();
 		_rect = GetComponent<RectTransform>();
 
@@ -69,7 +57,6 @@ public class NodePiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 	public void ResetPosition()
 	{
 		_pos = new Vector2(32 + (64 * index.x), -32 - (64 * index.y));
-		_flippedPiece = null;
 	}
 
 	public bool UpdatePiece()
