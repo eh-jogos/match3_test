@@ -14,9 +14,11 @@ public class Match3 : MonoBehaviour
 
 	int width = 9;
 	int height = 14;
+	int[] fills;
 	Node[,] board;
 	List<NodePiece> piecesToUpdate;
 	List<FlippedPieces> piecesToFlip;
+	List<NodePiece> dead;
 	
 	System.Random random;
 	
@@ -28,14 +30,75 @@ public class Match3 : MonoBehaviour
 
 	void StartGame()
 	{
+		fills = new int[width];
 		string seed = getRandomSeed();
 		random = new System.Random(seed.GetHashCode());
 		piecesToUpdate = new List<NodePiece>();
 		piecesToFlip = new List<FlippedPieces>();
+		dead = new List<NodePiece>();
 
 		InitializeBoard();
 		VerifyBoard();
 		InstantiateBoard();
+	}
+
+	void ApplyGravityToBoard()
+	{
+		for (int column = 0; column < width; column++)
+		{
+			for (int line = (height-1); line >= 0; line--)
+			{
+				Coord coord = new Coord(column, line);
+				Node empty_node = getNodeAtCoord(coord);
+				int type = getTypeAtCoord(coord);
+				
+				if (type != 0) // If it's not empty, than you don't need to do anything
+					continue;
+				
+				for (int new_line = (line - 1); new_line >= -1; new_line--)
+				{
+					Coord next_coord = new Coord(column, new_line);
+					int next_type = getTypeAtCoord(next_coord);
+					if (next_type == 0)
+						continue;
+					else if (next_type != -1) // Did not hit the end, but it's not 0
+					{
+						Node gem_node = getNodeAtCoord(next_coord);
+						NodePiece gem = gem_node.GetPiece();
+
+						empty_node.SetPiece(gem);
+						piecesToUpdate.Add(gem);
+
+						gem_node.SetPiece(null);
+					}
+					else // Hit an end
+					{
+						int new_type = fillPieces();
+						NodePiece new_piece;
+						Coord fallCoord = new Coord(column, -1 - fills[column]);
+						if (dead.Count > 0)
+						{
+							new_piece = dead[0];
+							new_piece.gameObject.SetActive(true);
+							dead.RemoveAt(0);
+						}
+						else
+						{
+							GameObject obj = Instantiate(nodePiece, gameBoard);
+							new_piece = obj.GetComponent<NodePiece>();
+						}
+
+						new_piece.Rect.anchoredPosition = getPositionFromCoord(fallCoord);
+						new_piece.Initialize(new_type, coord, pieces[new_type - 1]);
+
+						empty_node.SetPiece(new_piece);
+						ResetPiece(new_piece);
+						fills[column]++;
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	// Update is called once per frame
@@ -54,6 +117,9 @@ public class Match3 : MonoBehaviour
 			FlippedPieces flipDuo = getFlipped(piece);
 			bool wasFlipped = (flipDuo != null);
 			
+			int x = piece.index.x;
+			fills[x] = Mathf.Clamp(fills[x] - 1, 0, width);
+
 			List<Coord> connected = isConnected(piece.index, true);
 			
 			if (wasFlipped) // If we flipped to make this update
@@ -65,18 +131,19 @@ public class Match3 : MonoBehaviour
 			}
 			if (connected.Count > 0) // if we did make a match
 			{
-				Debug.Log("Connected: "+ connected.Count);
 				foreach(Coord coord in connected) // Remove the node pieces connected
 				{
-					Debug.Log("Remove Coord: "+ coord.x + ", " + coord.y);
 					Node node = getNodeAtCoord(coord);
 					NodePiece nodePiece = node.GetPiece();
 					if (nodePiece != null)
 					{
 						nodePiece.gameObject.SetActive(false);
+						dead.Add(nodePiece);
 					}
 					node.SetPiece(null);
 				}
+
+				ApplyGravityToBoard();
 			}
 
 			piecesToFlip.Remove(flipDuo); // Remove the flip after done
@@ -233,10 +300,6 @@ public class Match3 : MonoBehaviour
 			for (int i = 0; i < connected.Count; i++)
 				AddConnectedGems(ref connected, isConnected(connected[i], false));
 		}
-		Debug.Log("connected Count: " + connected.Count);
-
-		if (connected.Count > 0)
-			connected.Add(ref_coord);
 
 		return connected;
 	}
