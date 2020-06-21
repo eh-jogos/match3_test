@@ -100,15 +100,17 @@ public class Match3 : MonoBehaviour
 		{
 			for (int line = 0; line < height; line++)
 			{
-				int type = board[column, line].type;
+				Node node = getNodeAtCoord(new Coord(column, line));
+				int type = node.type;
 				if (type <= 0)
 					continue;
 				
 				GameObject node_object = Instantiate(nodePiece, gameBoard);
-				NodePiece node = node_object.GetComponent<NodePiece>();
+				NodePiece piece = node_object.GetComponent<NodePiece>();
 				RectTransform rect = node_object.GetComponent<RectTransform>();
 				rect.anchoredPosition = new Vector2(32 + (64 * column), -32 - (64 * line));
-				node.Initialize(type, new Coord(column, line), pieces[type - 1]);
+				piece.Initialize(type, new Coord(column, line), pieces[type - 1]);
+				node.SetPiece(piece);
 			}
 		}
 	}
@@ -117,6 +119,32 @@ public class Match3 : MonoBehaviour
 	{
 		piece.ResetPosition();
 		piecesToUpdate.Add(piece);
+	}
+
+	public void FlipPieces(Coord one, Coord two)
+	{
+		if (getTypeAtCoord(one) <= 0)
+			return;
+		
+		Node nodeOne = getNodeAtCoord(one);
+		NodePiece pieceOne = nodeOne.GetPiece();
+		
+		if (getTypeAtCoord(two) > 0)
+		{
+			Node nodeTwo = getNodeAtCoord(two);
+			NodePiece pieceTwo = nodeTwo.GetPiece();
+
+			nodeOne.SetPiece(pieceTwo);
+			nodeTwo.SetPiece(pieceOne);
+
+			pieceOne.FlippedPiece = pieceTwo;
+			pieceTwo.FlippedPiece = pieceOne;
+
+			piecesToUpdate.Add(pieceOne);
+			piecesToUpdate.Add(pieceTwo);
+		}
+		else
+			ResetPiece(pieceOne);
 	}
 
 	List<Coord> isConnected(Coord ref_coord, bool isMain)
@@ -314,6 +342,11 @@ public class Match3 : MonoBehaviour
 		return board[coord.x, coord.y].type; 
 	}
 
+	Node getNodeAtCoord(Coord coord)
+	{
+		return board[coord.x, coord.y];
+	}
+
 	public Vector2 getPositionFromCoord(Coord coord)
 	{
 		return new Vector2(36 + (64 * coord.x), -32 - (64 * coord.y));
@@ -346,11 +379,31 @@ public class Node
 	// 7 = start
 	public int type; 
 	public Coord index;
+	NodePiece piece;
 
 	
 	public Node(int value, Coord coord)
 	{		
 		type = value;
 		index = coord;
+	}
+
+	public void SetPiece(NodePiece new_piece)
+	{
+		piece = new_piece;
+		if (piece == null)
+		{
+			type = 0;
+			return;
+		}
+		else{
+			type = piece.type;
+			piece.SetIndex(index);
+		}
+	}
+
+	public NodePiece GetPiece()
+	{
+		return piece;
 	}
 }

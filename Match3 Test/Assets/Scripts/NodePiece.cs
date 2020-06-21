@@ -34,8 +34,8 @@ public class NodePiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 			_rect = value;
 		}
 	}
-	private Vector2 _flippedPiece;
-	public Vector2 FlippedPiece
+	private NodePiece _flippedPiece;
+	public NodePiece FlippedPiece
 	{
 		get 
 		{
@@ -70,11 +70,6 @@ public class NodePiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 	{
 		_pos = new Vector2(32 + (64 * index.x), -32 - (64 * index.y));
 		_flippedPiece = null;
-	}
-
-	public void FlipPieces()
-	{
-		
 	}
 
 	public bool UpdatePiece()
