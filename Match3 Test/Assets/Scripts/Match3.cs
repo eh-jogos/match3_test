@@ -6,17 +6,20 @@ using UnityEngine;
 public class Match3 : MonoBehaviour
 {
 	[Header("UI Elements")]
-	[SerializeField] Sprite[] pieces;
+	[SerializeField] Sprite[] sprites;
 	[SerializeField] RectTransform gameBoard;
+	[SerializeField] RectTransform killedBoard;
 
 	[Header("Prefabs")]
 	[SerializeField] GameObject nodePiece;
+	[SerializeField] GameObject killedPiece;
 
 	int width = 9;
 	int height = 14;
 	int[] fills;
 	Node[,] board;
 	List<NodePiece> piecesToUpdate;
+	List<KilledPiece> piecesToKill;
 	List<FlippedPieces> piecesToFlip;
 	List<NodePiece> dead;
 	
@@ -34,6 +37,7 @@ public class Match3 : MonoBehaviour
 		string seed = getRandomSeed();
 		random = new System.Random(seed.GetHashCode());
 		piecesToUpdate = new List<NodePiece>();
+		piecesToKill = new List<KilledPiece>();
 		piecesToFlip = new List<FlippedPieces>();
 		dead = new List<NodePiece>();
 
@@ -89,7 +93,7 @@ public class Match3 : MonoBehaviour
 						}
 
 						new_piece.Rect.anchoredPosition = getPositionFromCoord(fallCoord);
-						new_piece.Initialize(new_type, coord, pieces[new_type - 1]);
+						new_piece.Initialize(new_type, coord, sprites[new_type - 1]);
 
 						empty_node.SetPiece(new_piece);
 						ResetPiece(new_piece);
@@ -133,6 +137,7 @@ public class Match3 : MonoBehaviour
 			{
 				foreach(Coord coord in connected) // Remove the node pieces connected
 				{
+					KillPiece(coord);
 					Node node = getNodeAtCoord(coord);
 					NodePiece nodePiece = node.GetPiece();
 					if (nodePiece != null)
@@ -234,7 +239,7 @@ public class Match3 : MonoBehaviour
 				NodePiece piece = node_object.GetComponent<NodePiece>();
 				RectTransform rect = node_object.GetComponent<RectTransform>();
 				rect.anchoredPosition = new Vector2(32 + (64 * column), -32 - (64 * line));
-				piece.Initialize(type, new Coord(column, line), pieces[type - 1]);
+				piece.Initialize(type, new Coord(column, line), sprites[type - 1]);
 				node.SetPiece(piece);
 			}
 		}
@@ -270,6 +275,31 @@ public class Match3 : MonoBehaviour
 		}
 		else
 			ResetPiece(pieceOne);
+	}
+
+
+	void KillPiece(Coord coord)
+	{
+		List<KilledPiece> available = new List<KilledPiece>();
+		for (int i = 0; i < piecesToKill.Count; i++)
+		{
+			if (!piecesToKill[i].falling)
+				available.Add(piecesToKill[i]);
+		}
+
+		KilledPiece piece = null;
+		if (available.Count > 0)
+			piece = available[0];
+		else
+		{
+			GameObject kill = GameObject.Instantiate(killedPiece, killedBoard);
+			piece = kill.GetComponent<KilledPiece>();
+			piecesToKill.Add(piece);
+		}
+
+		int type = getTypeAtCoord(coord) - 1;
+		if (piece != null && type >= 0 && type < sprites.Length)
+			piece.Initialize(sprites[type], getPositionFromCoord(coord));
 	}
 
 	List<Coord> isConnected(Coord ref_coord, bool isMain)
@@ -440,14 +470,14 @@ public class Match3 : MonoBehaviour
 
 	int fillPieces()
 	{
-		int type = (random.Next(1, pieces.Length+1));
+		int type = (random.Next(1, sprites.Length+1));
 		return type;
 	}
 
 	int getNewValueExcept(ref List<int> toRemove)
 	{
 		List<int> possible_values = new List<int>();
-		for (int i = 0; i < pieces.Length; i++)
+		for (int i = 0; i < sprites.Length; i++)
 			possible_values.Add(i+1);
 		
 		foreach(int i in toRemove)
