@@ -6,4 +6,4 @@ O layout, Interface, Fluxo das Telas, Sistema de Pontuação e som foram feitos 
 
 Como não tenho muita prática no Unity demorei em torno de 16~18h para chegar nesse resultado.
 
-Os executaveis de Windows e Linux podem ser baixados [na aba Releases acima.](https://github.com/eh-jogos/match3_test/releases/tag/entrega-teste)
+Os executaveis de Windows e Linux podem ser baixados [na aba Releases acima.](https://github.com/eh-jogos/match3_test/releases/tag/entrega-teste-final)
