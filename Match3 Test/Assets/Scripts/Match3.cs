@@ -281,6 +281,8 @@ public class Match3 : MonoBehaviour
 
 			piecesToUpdate.Add(pieceOne);
 			piecesToUpdate.Add(pieceTwo);
+
+			SfxPlayer.instance.PlayGemFlipSfx();
 		}
 		else
 			ResetPiece(pieceOne);

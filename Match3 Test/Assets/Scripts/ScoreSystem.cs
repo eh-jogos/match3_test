@@ -73,6 +73,7 @@ public class ScoreSystem : MonoBehaviour
 		{
 			updateEndScreenMessage.Invoke(successMessage);
 			updateEndScreenButton.Invoke("Next");
+			SfxPlayer.instance.PlayGameClearSfx();
 		}
 		else
 		{
