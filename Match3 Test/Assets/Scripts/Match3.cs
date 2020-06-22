@@ -22,16 +22,23 @@ public class Match3 : MonoBehaviour
 	List<KilledPiece> piecesToKill;
 	List<FlippedPieces> piecesToFlip;
 	List<NodePiece> dead;
+	ScoreSystem scoreSystem;
 	
 	System.Random random;
 	
 	// Start is called before the first frame update
 	void Start()
 	{
-		StartGame();
+		scoreSystem = GetComponent<ScoreSystem>();
+		enabled = false;
 	}
 
-	void StartGame()
+	public void QuitGame()
+	{
+		Application.Quit();
+	}
+
+	public void StartGame()
 	{
 		fills = new int[width];
 		string seed = getRandomSeed();
@@ -44,6 +51,7 @@ public class Match3 : MonoBehaviour
 		InitializeBoard();
 		VerifyBoard();
 		InstantiateBoard();
+		enabled = true;
 	}
 
 	void ApplyGravityToBoard()
@@ -135,6 +143,7 @@ public class Match3 : MonoBehaviour
 			}
 			if (connected.Count > 0) // if we did make a match
 			{
+				scoreSystem.IncrementScore(connected.Count);
 				foreach(Coord coord in connected) // Remove the node pieces connected
 				{
 					KillPiece(coord);
@@ -520,7 +529,16 @@ public class Match3 : MonoBehaviour
 		{
 			seed += acceptableChars[Random.Range(0, acceptableChars.Length)];
 		}
+		
 		return seed;
+	}
+
+	public void GameTimerTimedOut()
+	{
+		foreach(Transform child in gameBoard.transform)
+		{
+			GameObject.Destroy(child.gameObject);
+		}
 	}
 }
 

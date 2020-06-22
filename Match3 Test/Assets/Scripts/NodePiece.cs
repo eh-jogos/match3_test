@@ -96,10 +96,12 @@ public class NodePiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
 		updating = true;
 		MovePieces.instance.MovePiece(this);
+		img.color = new Color32(103,87,255,255);
 	}
 
 	public void OnPointerUp(PointerEventData eventData)
 	{
 		MovePieces.instance.DropPiece();
+		img.color = new Color32(255,255,255,255);
 	}
 }
