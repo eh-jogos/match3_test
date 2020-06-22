@@ -13,8 +13,7 @@ public class Countdown : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		tmpText = GetComponent<TextMeshProUGUI>();
-		tmpText.text = timeStart.ToString();
-		currenTime = timeStart;
+        enabled = false;
 	}
 	
 	// Update is called once per frame
